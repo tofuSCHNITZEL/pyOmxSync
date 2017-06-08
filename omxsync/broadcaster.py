@@ -50,7 +50,7 @@ class Broadcaster:
 
     def _broadcast_position(self):
         p = self.player.position()
-        duration = self.player.duration_us()
+        duration = self.player.duration()
         filename = self.player.get_filename()
 
         if not p and not filename:

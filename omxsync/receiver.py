@@ -88,7 +88,7 @@ class Receiver:
 
         # check file; if master is playing a different file, then there is no use in time-syncing
         if self.duration_match is None:
-            if not self.received_duration == self.player.get_duration():
+            if not self.received_duration == self.player.duration():
                 print('durations of files does not match! Master:%s Slave%s' % (self.received_duration, self.player.get_duration()))
                 return
             else:
