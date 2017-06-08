@@ -37,7 +37,6 @@ class Receiver:
         self.duration_match = None
         self.rate = 1
         self.update_thread = Thread(target=self.update_loop())
-        self.update_thread.start()
 
     def __del__(self):
         self.destroy()
@@ -52,6 +51,7 @@ class Receiver:
         self.socket.setblocking(0)
         # bind to configured host/port
         self.socket.bind((host, port))
+        self.update_thread.start()
 
     def destroy(self):
         if self.socket:
