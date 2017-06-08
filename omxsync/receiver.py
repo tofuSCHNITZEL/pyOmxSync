@@ -78,7 +78,7 @@ class Receiver:
 
         # store received data
         self.received_position = float(data[0])
-        self.received_duration = data[1]
+        self.received_duration = float(data[1])
 
         # calculate current deviation based on newly received maste position
         self.deviation = self.received_position - local_pos
@@ -88,8 +88,8 @@ class Receiver:
 
         # check file; if master is playing a different file, then there is no use in time-syncing
         if self.duration_match is None:
-            if not self.received_duration == self.player.duration():
-                print('durations of files does not match! Master:%s Slave%s' % (self.received_duration, self.player.get_duration()))
+            if not self.received_duration == float(self.player.duration()):
+                print('durations of files does not match! Master:%s Slave%s' % (self.received_duration, self.player.duration()))
                 return
             else:
                 self.duration_match = True
