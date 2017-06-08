@@ -23,13 +23,14 @@ class Receiver:
         # attributes
         self.socket = None
         self.received_position = None
-        self.received_filename = None
+        self.received_duration = None
         self.last_measure_time = 0
         self.paused_until = None
         self.dont_sync_until = 0
         self.deviation = 0
         self.deviations = collections.deque(maxlen=10)
         self.median_deviation = 0
+        self.duration_match = None
 
     def __del__(self):
         self.destroy()
@@ -77,19 +78,21 @@ class Receiver:
 
         # store received data
         self.received_position = float(data[0])
-        self.received_filename = data[1]
+        self.received_duration = data[1]
 
         # calculate current deviation based on newly received maste position
         self.deviation = self.received_position - local_pos
 
         if self.verbose:
-            print('PositionReceiver got: %s @ %.2f (deviation: %.2f)' % (self.received_filename, self.received_position, self.deviation))
+            print('PositionReceiver got: %s @ %.2f (deviation: %.2f)' % (self.received_duration, self.received_position, self.deviation))
 
         # check file; if master is playing a different file, then there is no use in time-syncing
-        if not os.path.basename(self.received_filename) == os.path.basename(self.player.get_filename()):
-            print('PositionReceiver got different file ('+os.path.basename(self.received_filename)+') from own current file: '+os.path.basename(self.player.get_filename()))
-            # todo; try to load same file?
-            return
+        if self.duration_match is None:
+            if not self.received_duration == self.player.get_duration():
+                print('durations of files does not match! Master:%s Slave%s' % (self.received_duration, self.player.get_duration()))
+                return
+            else:
+                self.duration_match = True
 
         # calculate median deviation
         self.deviations.append(self.deviation)
@@ -117,8 +120,8 @@ class Receiver:
     def _receive_data(self):
         try:
             # read incoming socket data
-            pos, filename = self.socket.recv(1024).decode('utf-8').split('%', 1)
-            return (pos, filename)
+            pos, duration = self.socket.recv(1024).decode('utf-8').split('%', 1)
+            return (pos, duration)
         except Exception as e:
             pass
 
