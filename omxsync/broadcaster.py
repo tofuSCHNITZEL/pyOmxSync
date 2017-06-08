@@ -16,7 +16,7 @@ class Broadcaster:
         # attributes
         self.socket = None
         self.next_broadcast_time = 0
-        self.update_thread = Thread(target=self.update_loop())
+        self.update_thread = None
 
     def __del__(self):
         self.destroy()
@@ -36,6 +36,7 @@ class Broadcaster:
             print("PositionBroadcaster: network is unreachable")
 
     def start_thread(self):
+        self.update_thread = Thread(target=self.update_loop())
         self.update_thread.start()
 
     def destroy(self):
