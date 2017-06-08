@@ -129,7 +129,7 @@ class Receiver:
     def _receive_data(self):
         try:
             # read incoming socket data
-            pos, duration, playback_status = self.socket.recv(1024).decode('utf-8').split('%', 1)
+            pos, duration, playback_status = self.socket.recv(1024).decode('utf-8').split('%', 2)
             return (pos, duration, playback_status)
         except Exception as e:
             pass
