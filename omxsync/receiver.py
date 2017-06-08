@@ -152,12 +152,12 @@ class Receiver:
         return float(sum(sorted(lst)[quotient - 1:quotient + 1]) / 2.0)
 
     def _perform_small_sync(self):
-        if self.deviation < 0 and self.rate < 2:
-            self.player.action(2)
-            self.rate += 1
-        elif self.deviation > 0 and self.rate > 0:
+        if self.deviation < 0 and self.rate > 0:
             self.player.action(1)
             self.rate -= 1
+        elif self.deviation > 0 and self.rate < 2:
+            self.player.action(2)
+            self.rate += 1
 
     def _reset_small_sync(self):
             if self.rate == 2:
