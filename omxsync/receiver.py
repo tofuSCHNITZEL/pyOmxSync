@@ -36,7 +36,7 @@ class Receiver:
         self.median_deviation = 0
         self.duration_match = None
         self.rate = 1
-        self.update_thread = Thread(target=self.update_loop())
+        self.update_thread = None
 
     def __del__(self):
         self.destroy()
@@ -53,6 +53,7 @@ class Receiver:
         self.socket.bind((host, port))
 
     def start_thread(self):
+        self.update_thread = Thread(target=self.update_loop())
         self.update_thread.start()
 
     def destroy(self):
