@@ -1,5 +1,6 @@
 import socket
 from time import time
+from threading import Thread
 
 DEFAULT_PORT = 1666
 DEFAULT_HOST = '255.255.255.255'
@@ -15,6 +16,8 @@ class Broadcaster:
         # attributes
         self.socket = None
         self.next_broadcast_time = 0
+        self.update_thread = Thread(target=self.update_loop())
+        self.update_thread.start()
 
     def __del__(self):
         self.destroy()
@@ -37,6 +40,10 @@ class Broadcaster:
         if self.socket:
             self.socket.close()
             self.socket = None
+
+    def update_loop(self):
+        while self.player.playback_status() != "Stopped":
+            self.update()
 
     def update(self):
         t = time()

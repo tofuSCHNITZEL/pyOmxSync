@@ -2,6 +2,7 @@ import socket
 import os
 from time import time
 import collections
+from threading import Thread
 
 DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 1666
@@ -35,6 +36,8 @@ class Receiver:
         self.median_deviation = 0
         self.duration_match = None
         self.rate = 1
+        self.update_thread = Thread(target=self.update_loop())
+        self.update_thread.start()
 
     def __del__(self):
         self.destroy()
@@ -54,6 +57,10 @@ class Receiver:
         if self.socket:
             self.socket.close()
             self.socket = None
+
+    def update_loop(self):
+        while self.player.playback_status() != "Stopped":
+            self.update()
 
     def update(self):
         # keep receiving data so don't get whole batch of data later
@@ -94,7 +101,7 @@ class Receiver:
         if self.received_status == 'Paused':
             return
 
-        # calculate current deviation based on newly received maste position
+        # calculate current deviation based on newly received master position
         self.deviation = self.received_position - local_pos
 
         if self.verbose:
@@ -117,8 +124,13 @@ class Receiver:
         if self.verbose:
             print('PositionReceiver.median_deviation: ' + str(self.median_deviation))
 
-        # still at start of video, don't sync
-        if self.received_position <= self.grace_time: # or self.player.position() <= self.grace_time:
+        # still at start or end of video, don't sync
+        if self.received_position <= self.grace_time:  # or self.player.position() <= self.grace_time:
+            return
+
+        if (self.received_duration - local_pos) < self.grace_time:
+            if self.rate != 1:
+                self._reset_small_sync()
             return
 
         # not deviated very much, nothing to sync
@@ -162,7 +174,7 @@ class Receiver:
     def _reset_small_sync(self):
             if self.rate == 2:
                 self.player.action(1)
-            else:
+            elif self.rate == 0:
                 self.player.action(2)
             self.rate = 1
 
