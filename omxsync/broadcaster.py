@@ -1,5 +1,5 @@
 import socket
-from time import time, sleep
+from time import time
 from threading import Thread
 
 DEFAULT_PORT = 1666
@@ -32,7 +32,6 @@ class Broadcaster:
 
         try:
             self.socket.connect((host, port))
-            sleep(1)
             self.update_thread.start()
         except:
             print("PositionBroadcaster: network is unreachable")
