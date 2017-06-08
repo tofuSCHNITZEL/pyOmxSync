@@ -32,9 +32,11 @@ class Broadcaster:
 
         try:
             self.socket.connect((host, port))
-            self.update_thread.start()
         except:
             print("PositionBroadcaster: network is unreachable")
+
+    def start_thread(self):
+        self.update_thread.start()
 
     def destroy(self):
         if self.socket:

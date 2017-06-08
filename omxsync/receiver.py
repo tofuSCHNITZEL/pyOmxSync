@@ -51,6 +51,8 @@ class Receiver:
         self.socket.setblocking(0)
         # bind to configured host/port
         self.socket.bind((host, port))
+
+    def start_thread(self):
         self.update_thread.start()
 
     def destroy(self):
