@@ -59,8 +59,8 @@ class Receiver:
         if local_pos is None: # we'll need our own local position
             return
         local_status = self.player.playback_status()
-        if local_status is None:
-            return
+        # if local_status is None:
+        #     return
 
         self.last_measure_time = time()
 
@@ -85,8 +85,8 @@ class Receiver:
         self.received_duration = float(data[1])
         self.received_status = data[2]
 
-        if local_status != self.received_status:
-            self.player.play_pause()
+        # if local_status != self.received_status:
+        #     self.player.play_pause()
 
         # calculate current deviation based on newly received maste position
         self.deviation = self.received_position - local_pos
