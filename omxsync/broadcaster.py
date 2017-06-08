@@ -49,18 +49,18 @@ class Broadcaster:
             self.next_broadcast_time = t + self.interval
 
     def _broadcast_position(self):
-        p = self.player.position()
         duration = self.player.duration()
-        filename = self.player.get_filename()
+        playback_status = self.player.playback_status()
+        p = self.player.position()
 
-        if not p and not filename:
+        if not p and not duration and not playback_status:
             return
 
         try:
-            self.socket.send(("%s%%%s" % (str(p),  duration)).encode('utf-8'))
+            self.socket.send(("%s%%%s%%%s" % (str(p),  duration, playback_status)).encode('utf-8'))
         except socket.error as err:
             print("PositionBroadcaster: socket.send failed:")
             print(err)
 
         if self.verbose:
-            print('broadcast position: ' + str(p) + ', with filename: ' + filename)
+            print('broadcast position: %s of %s' % (str(p), duration))

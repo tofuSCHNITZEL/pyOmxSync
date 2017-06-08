@@ -24,6 +24,7 @@ class Receiver:
         self.socket = None
         self.received_position = None
         self.received_duration = None
+        self.received_status = None
         self.last_measure_time = 0
         self.paused_until = None
         self.dont_sync_until = 0
@@ -55,7 +56,10 @@ class Receiver:
         # keep receiving data so don't get whole batch of data later
         data = self._receive_data()
         local_pos = self.player.position()
-        if local_pos == None: # we'll need our own local position
+        if local_pos is None: # we'll need our own local position
+            return
+        local_status = self.player.playback_status()
+        if local_status is None:
             return
 
         self.last_measure_time = time()
@@ -79,12 +83,17 @@ class Receiver:
         # store received data
         self.received_position = float(data[0])
         self.received_duration = float(data[1])
+        self.received_status = data[2]
+
+        if local_status != self.received_status:
+            self.player.play_pause()
 
         # calculate current deviation based on newly received maste position
         self.deviation = self.received_position - local_pos
 
         if self.verbose:
-            print('PositionReceiver got: %s @ %.2f (deviation: %.2f)' % (self.received_duration, self.received_position, self.deviation))
+            print('PositionReceiver got: %s @ %.2f (deviation: %.2f, status: %s)' %
+                  (self.received_duration, self.received_position, self.deviation, local_status))
 
         # check file; if master is playing a different file, then there is no use in time-syncing
         if self.duration_match is None:
@@ -120,8 +129,8 @@ class Receiver:
     def _receive_data(self):
         try:
             # read incoming socket data
-            pos, duration = self.socket.recv(1024).decode('utf-8').split('%', 1)
-            return (pos, duration)
+            pos, duration, playback_status = self.socket.recv(1024).decode('utf-8').split('%', 1)
+            return (pos, duration, playback_status)
         except Exception as e:
             pass
 
