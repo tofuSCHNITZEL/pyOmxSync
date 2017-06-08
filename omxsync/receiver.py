@@ -6,6 +6,7 @@ import collections
 DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 1666
 
+DEFAULT_BIG_TOLERANCE = 2
 DEFAULT_TOLERANCE = .05 # margin that is considered acceptable for slave to be ahead or behind
 DEFAULT_GRACE_TIME = 3 # amount of time to wait with re-syncs after a resync
 DEFAULT_JUMP_AHEAD = 3 # amount of time to jump ahead of master's playback position (giving slave enough time to load new keyframes)
@@ -16,6 +17,7 @@ class Receiver:
         self.player = omxplayer
         self.options = options
         self.verbose = options['verbose'] if 'verbose' in options else False
+        self.big_tolerance = options['big_tolerance'] if 'big_tolerance' in options else DEFAULT_BIG_TOLERANCE
         self.tolerance = options['tolerance'] if 'tolerance' in options else DEFAULT_TOLERANCE
         self.grace_time = options['grace_time'] if 'grace_time' in options else DEFAULT_GRACE_TIME
         self.jump_ahead = options['jump_ahead'] if 'jump_ahead' in options else DEFAULT_JUMP_AHEAD
@@ -32,6 +34,7 @@ class Receiver:
         self.deviations = collections.deque(maxlen=10)
         self.median_deviation = 0
         self.duration_match = None
+        self.rate = 1
 
     def __del__(self):
         self.destroy()
@@ -95,13 +98,14 @@ class Receiver:
         self.deviation = self.received_position - local_pos
 
         if self.verbose:
-            print('PositionReceiver got: %s @ %.2f (deviation: %.2f, status: %s)' %
-                  (self.received_duration, self.received_position, self.deviation, local_status))
+            print('PositionReceiver got: %s @ %.2f (deviation: %.2f, status: %s, rate: %s)' %
+                  (self.received_duration, self.received_position, self.deviation, local_status, self.rate))
 
         # check file; if master is playing a different file, then there is no use in time-syncing
         if self.duration_match is None:
             if not self.received_duration == float(self.player.duration()):
-                print('durations of files does not match! Master:%s Slave%s' % (self.received_duration, self.player.duration()))
+                print('durations of files does not match! Master:%s Slave%s' %
+                      (self.received_duration, self.player.duration()))
                 return
             else:
                 self.duration_match = True
@@ -119,6 +123,8 @@ class Receiver:
 
         # not deviated very much, nothing to sync
         if abs(self.median_deviation) <= self.tolerance:
+            if self.rate != 1:
+                self._reset_small_sync()
             return
 
         # still in post-sync gracetime
@@ -127,7 +133,7 @@ class Receiver:
 
         # ok, let's do some syncing
         self.deviations.clear()
-        self._perform_sync()
+        self._perform_small_sync()
 
     def _receive_data(self):
         try:
@@ -145,7 +151,22 @@ class Receiver:
             return sorted(lst)[quotient]
         return float(sum(sorted(lst)[quotient - 1:quotient + 1]) / 2.0)
 
-    def _perform_sync(self):
+    def _perform_small_sync(self):
+        if self.deviation < 0 and self.rate < 2:
+            self.player.action(2)
+            self.rate += 1
+        elif self.deviation > 0 and self.rate > 0:
+            self.player.action(1)
+            self.rate -= 1
+
+    def _reset_small_sync(self):
+            if self.rate == 2:
+                self.player.action(1)
+            else:
+                self.player.action(2)
+            self.rate = 1
+
+    def _perform_big_sync(self):
         # negative deviation means we are ahead of master; if we're ahead but no by too much
         # (less that self.jump_ahead); don't jump, but simply pause until master catches up
         if self.deviation < 0 and abs(self.deviation) < self.jump_ahead:
