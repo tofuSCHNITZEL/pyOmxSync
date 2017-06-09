@@ -10,7 +10,7 @@ DEFAULT_PORT = 1666
 DEFAULT_BIG_TOLERANCE = 3 # amount of deviation above which a large sync should be performed
 DEFAULT_TOLERANCE = .05 # margin that is considered acceptable for slave to be ahead or behind
 DEFAULT_GRACE_TIME = 3 # amount of time to wait with re-syncs after a resync
-DEFAULT_JUMP_AHEAD = 2 # amount of time to jump ahead of master's playback position (giving slave enough time to load new keyframes)
+DEFAULT_JUMP_AHEAD = 1 # amount of time to jump ahead of master's playback position (giving slave enough time to load new keyframes)
 
 class Receiver:
     def __init__(self, omxplayer, options = {}):
@@ -187,24 +187,12 @@ class Receiver:
             self.rate = 1
 
     def _perform_big_sync(self):
-        # negative deviation means we are ahead of master; if we're ahead but no by too much
-        # (less that self.jump_ahead); don't jump, but simply pause until master catches up
-        if self.deviation < 0 and abs(self.deviation) < self.jump_ahead:
-            self.player.pause()
-            # let's pause the amount of deviation time
-            self.paused_until = self.last_measure_time - self.deviation
-            if self.verbose:
-                print("paused for %.2f seconds" % (-self.deviation))
-            return
-
-        # ok, so we're lacking behind
         # calculate position to jump to (bit ahead of master's playback position)
         pos = self.received_position + self.jump_ahead
         # pause and jump to calculated position
-        self.player.pause()
         self.player.set_position(pos)
         # pause until the master should have caught up
-        self.paused_until = self.last_measure_time + self.jump_ahead
+        # self.paused_until = self.last_measure_time + self.jump_ahead
 
         if self.verbose:
             print("jumped to position %.2f and paused for %.2f seconds" % (pos, self.jump_ahead))
