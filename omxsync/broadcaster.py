@@ -24,6 +24,7 @@ class Broadcaster:
             self.setup()
             self.update_thread = Thread(target=self.update_loop())
             self.update_thread.start()
+            self.update_thread.join()
             # self.start_thread()
 
     def __del__(self):
