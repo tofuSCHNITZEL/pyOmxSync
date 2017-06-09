@@ -20,12 +20,9 @@ class Broadcaster:
         self.socket = None
         self.next_broadcast_time = 0
         self.update_thread = None
+        self.setup()
         if self.background is True:
-            self.setup()
-            self.update_thread = Thread(target=self.update_loop())
-            self.update_thread.start()
-            self.update_thread.join()
-            # self.start_thread()
+            self.start_thread()
 
     def __del__(self):
         self.destroy()
@@ -52,6 +49,7 @@ class Broadcaster:
 
     def start_thread(self):
         self.update_thread = Thread(target=self.update_loop())
+        self.update_thread.daemon = True
         self.update_thread.start()
 
     def destroy(self):
