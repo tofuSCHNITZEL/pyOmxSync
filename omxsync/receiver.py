@@ -76,7 +76,6 @@ class Receiver:
             try:
                 self.update()
             except DBusException:
-                self.socket.close()
                 break
 
     def update(self):
