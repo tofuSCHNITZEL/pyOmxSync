@@ -7,31 +7,40 @@ DEFAULT_HOST = '255.255.255.255'
 DEFAULT_INTERVAL = 1.0 # seconds
 
 class Broadcaster:
-    def __init__(self, omxplayer, options = {}):
+    def __init__(self, omxplayer, verbose=False, interval=DEFAULT_INTERVAL, host=DEFAULT_HOST, port=DEFAULT_PORT,
+                 background=True):
         # config
         self.player = omxplayer
-        self.options = options
-        self.verbose = options['verbose'] if 'verbose' in options else False
-        self.interval = options['interval'] if 'interval' in options else DEFAULT_INTERVAL
+        self.verbose = verbose if type(verbose) is bool else False
+        self.interval = interval if type(interval) in (int, float) else DEFAULT_INTERVAL
+        host_test = host.split('.', 3)
+        try:
+            all(int(item) for item in host_test)
+            if len(host_test) == 4:
+                self.host = host
+        except:
+            self.host = DEFAULT_HOST
+        self.port = port if type(port) is int else DEFAULT_PORT
+        self.background = background if type(background) is bool else True
         # attributes
         self.socket = None
         self.next_broadcast_time = 0
         self.update_thread = None
+        if self.background is True:
+            self.setup()
+            self.start_thread()
 
     def __del__(self):
         self.destroy()
 
     def setup(self):
-        host = self.options['host'] if 'host' in self.options else DEFAULT_HOST
-        port = self.options['port'] if 'port' in self.options else DEFAULT_PORT
-
         # create socket connections
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
         # enable broadcasting
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
         try:
-            self.socket.connect((host, port))
+            self.socket.connect((self.host, self.port))
         except:
             print("PositionBroadcaster: network is unreachable")
 
