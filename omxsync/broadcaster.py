@@ -48,8 +48,7 @@ class Broadcaster:
             print("PositionBroadcaster: network is unreachable")
 
     def start_thread(self):
-        self.update_thread = Thread(target=self.update_loop())
-        self.update_thread.daemon = True
+        self.update_thread = Thread(target=self.update_loop)
         self.update_thread.start()
 
     def destroy(self):
