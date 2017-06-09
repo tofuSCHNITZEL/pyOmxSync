@@ -1,6 +1,7 @@
 import socket
 from time import time
 from threading import Thread
+from dbus import DBusException
 
 DEFAULT_PORT = 1666
 DEFAULT_HOST = '255.255.255.255'
@@ -57,8 +58,12 @@ class Broadcaster:
             self.socket = None
 
     def update_loop(self):
-        while self.player.playback_status() != "Stopped":
-            self.update()
+        while True:
+            try:
+                self.update()
+            except DBusException:
+                self.socket.close()
+                break
 
     def update(self):
         t = time()

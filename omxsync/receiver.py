@@ -1,5 +1,5 @@
 import socket
-import os
+from dbus import DBusException
 from time import time
 import collections
 from threading import Thread
@@ -53,7 +53,7 @@ class Receiver:
         self.socket.bind((host, port))
 
     def start_thread(self):
-        self.update_thread = Thread(target=self.update_loop())
+        self.update_thread = Thread(target=self.update_loop)
         self.update_thread.start()
 
     def destroy(self):
@@ -62,8 +62,12 @@ class Receiver:
             self.socket = None
 
     def update_loop(self):
-        while self.player.playback_status() != "Stopped":
-            self.update()
+        while True:
+            try:
+                self.update()
+            except DBusException:
+                self.socket.close()
+                break
 
     def update(self):
         # keep receiving data so don't get whole batch of data later
