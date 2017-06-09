@@ -13,44 +13,54 @@ DEFAULT_GRACE_TIME = 3 # amount of time to wait with re-syncs after a resync
 DEFAULT_JUMP_AHEAD = 1 # amount of time to jump ahead of master's playback position (giving slave enough time to load new keyframes)
 
 class Receiver:
-    def __init__(self, omxplayer, options = {}):
+    def __init__(self, omxplayer, verbose=False, big_tolerance=DEFAULT_BIG_TOLERANCE, tolerance=DEFAULT_TOLERANCE,
+                 grace_time=DEFAULT_GRACE_TIME, jump_ahead=DEFAULT_JUMP_AHEAD, host=DEFAULT_HOST, port=DEFAULT_PORT,
+                 background=True):
         # config
         self.player = omxplayer
-        self.options = options
-        self.verbose = options['verbose'] if 'verbose' in options else False
-        self.big_tolerance = options['big_tolerance'] if 'big_tolerance' in options else DEFAULT_BIG_TOLERANCE
-        self.tolerance = options['tolerance'] if 'tolerance' in options else DEFAULT_TOLERANCE
-        self.grace_time = options['grace_time'] if 'grace_time' in options else DEFAULT_GRACE_TIME
-        self.jump_ahead = options['jump_ahead'] if 'jump_ahead' in options else DEFAULT_JUMP_AHEAD
-
+        self.verbose = verbose if type(verbose) is bool else False
+        self.big_tolerance = big_tolerance if type(big_tolerance) in (int, float) else DEFAULT_BIG_TOLERANCE
+        self.tolerance = tolerance if type(tolerance) in (int, float) else DEFAULT_TOLERANCE
+        self.grace_time = grace_time if type(grace_time) in (int, float) else DEFAULT_GRACE_TIME
+        self.jump_ahead = jump_ahead if type(jump_ahead) in (int, float) else DEFAULT_JUMP_AHEAD
+        self.host = self.test_host(host)
+        self.port = port if type(port) is int else DEFAULT_PORT
+        self.background = background if type(background) is bool else True
         # attributes
         self.socket = None
         self.received_position = None
         self.received_duration = None
         self.received_status = None
-        self.last_measure_time = 0
         self.paused_until = None
-        self.dont_sync_until = 0
         self.deviation = 0
         self.deviations = collections.deque(maxlen=10)
         self.median_deviation = 0
         self.duration_match = None
         self.rate = 1
         self.update_thread = None
+        self.setup()
+        if self.background is True:
+            self.start_thread()
 
     def __del__(self):
         self.destroy()
 
-    def setup(self):
-        host = self.options['host'] if 'host' in self.options else DEFAULT_HOST
-        port = self.options['port'] if 'port' in self.options else DEFAULT_PORT
+    def test_host(self, host):
+        host_test = host.split('.', 3)
+        try:
+            all(int(item) for item in host_test)
+            if len(host_test) == 4:
+                return host
+        except:
+            return DEFAULT_HOST
 
+    def setup(self):
         # create socket connections
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
         # non-blocking, please
         self.socket.setblocking(0)
         # bind to configured host/port
-        self.socket.bind((host, port))
+        self.socket.bind((self.host, self.port))
 
     def start_thread(self):
         self.update_thread = Thread(target=self.update_loop)
@@ -78,20 +88,6 @@ class Receiver:
         local_status = self.player.playback_status()
         if local_status is None:
             return
-
-        self.last_measure_time = time()
-
-        # paused for master to catch-up?
-        if self.paused_until:
-            if self.last_measure_time < self.paused_until:
-                # still waiting
-                return
-            # stop waiting and resume playback
-            self.paused_until = None
-            self.player.play()
-            if self.verbose:
-                print("resuming playback")
-            self.dont_sync_until = self.last_measure_time + self.grace_time
 
         # no data? no action.
         if not data:
@@ -144,10 +140,6 @@ class Receiver:
         if abs(self.median_deviation) <= self.tolerance:
             if self.rate != 1:
                 self._reset_small_sync()
-            return
-
-        # still in post-sync gracetime
-        if self.last_measure_time < self.dont_sync_until:
             return
 
         # ok, let's do some syncing
