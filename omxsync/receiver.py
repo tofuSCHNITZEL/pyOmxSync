@@ -7,10 +7,10 @@ from threading import Thread
 DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 1666
 
-DEFAULT_BIG_TOLERANCE = 2
+DEFAULT_BIG_TOLERANCE = 3 # amount of deviation above which a large sync should be performed
 DEFAULT_TOLERANCE = .05 # margin that is considered acceptable for slave to be ahead or behind
 DEFAULT_GRACE_TIME = 3 # amount of time to wait with re-syncs after a resync
-DEFAULT_JUMP_AHEAD = 3 # amount of time to jump ahead of master's playback position (giving slave enough time to load new keyframes)
+DEFAULT_JUMP_AHEAD = 2 # amount of time to jump ahead of master's playback position (giving slave enough time to load new keyframes)
 
 class Receiver:
     def __init__(self, omxplayer, options = {}):
@@ -148,6 +148,11 @@ class Receiver:
 
         # ok, let's do some syncing
         self.deviations.clear()
+
+        if abs(self.median_deviation) >= self.big_tolerance:
+            self._perform_big_sync()
+            return
+
         self._perform_small_sync()
 
     def _receive_data(self):
