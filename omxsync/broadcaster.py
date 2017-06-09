@@ -13,13 +13,7 @@ class Broadcaster:
         self.player = omxplayer
         self.verbose = verbose if type(verbose) is bool else False
         self.interval = interval if type(interval) in (int, float) else DEFAULT_INTERVAL
-        host_test = host.split('.', 3)
-        try:
-            all(int(item) for item in host_test)
-            if len(host_test) == 4:
-                self.host = host
-        except:
-            self.host = DEFAULT_HOST
+        self.host = self.test_host(host)
         self.port = port if type(port) is int else DEFAULT_PORT
         self.background = background if type(background) is bool else True
         # attributes
@@ -28,10 +22,21 @@ class Broadcaster:
         self.update_thread = None
         if self.background is True:
             self.setup()
-            self.start_thread()
+            self.update_thread = Thread(target=self.update_loop())
+            self.update_thread.start()
+            # self.start_thread()
 
     def __del__(self):
         self.destroy()
+
+    def test_host(self, host):
+        host_test = host.split('.', 3)
+        try:
+            all(int(item) for item in host_test)
+            if len(host_test) == 4:
+                return host
+        except:
+            return DEFAULT_HOST
 
     def setup(self):
         # create socket connections
