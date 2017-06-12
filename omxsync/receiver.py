@@ -38,6 +38,7 @@ class Receiver:
         self.duration_match = None
         self.rate = 1
         self.update_thread = None
+        self.message = ""
         self.setup()
         if self.background is True:
             self.start_thread()
@@ -108,8 +109,9 @@ class Receiver:
         self.deviation = self.received_position - local_pos
 
         if self.verbose:
-            print('PositionReceiver got: %s @ %.2f (deviation: %.2f, status: %s, rate: %s)' %
-                  (self.received_duration, self.received_position, self.deviation, local_status, self.rate))
+            self.message = 'PositionReceiver: %s @ %.2f (deviation: %.2f, status: %s, rate: %s)' % \
+                           (self.received_duration, self.received_position, self.deviation, local_status, self.rate)
+        print self.message
 
         # check file; if master is playing a different file, then there is no use in time-syncing
         if self.duration_match is None:
