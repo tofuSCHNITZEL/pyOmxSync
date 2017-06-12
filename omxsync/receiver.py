@@ -109,7 +109,7 @@ class Receiver:
         self.deviation = self.received_position - local_pos
 
         if self.verbose:
-            self.message = 'Master: %.2f/%s (deviation: %.2f, %s, rate: %s)' % \
+            self.message = 'Master: %.2f/%.2f (deviation: %.2f, %s, rate: %s)' % \
                            (self.received_duration, self.received_position, self.deviation, local_status, self.rate)
         print self.message
 
