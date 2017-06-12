@@ -21,6 +21,7 @@ class Broadcaster:
         self.socket = None
         self.next_broadcast_time = 0
         self.update_thread = None
+        self.message = ""
         self.setup()
         if self.background is True:
             self.start_thread()
@@ -86,8 +87,10 @@ class Broadcaster:
         try:
             self.socket.send(("%s%%%s%%%s" % (str(p),  duration, playback_status)).encode('utf-8'))
         except socket.error as err:
-            print("PositionBroadcaster: socket.send failed:")
+            self.message = "PositionBroadcaster: socket.send failed:"
+            print(self.message)
             print(err)
 
         if self.verbose:
-            print('broadcast position: %s of %s' % (str(p), duration))
+            self.message = 'broadcast position: %s/%s Playback:%s' % (str(p), duration, playback_status)
+            print(self.message)
