@@ -92,5 +92,5 @@ class Broadcaster:
             print(err)
 
         if self.verbose:
-            self.message = 'broadcast position: %s/%s Playback:%s' % (str(p), duration, playback_status)
+            self.message = 'broadcast position: %.2f/%.2f Playback:%s' % (str(p), duration, playback_status)
             print(self.message)
