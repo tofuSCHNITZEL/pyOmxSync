@@ -38,7 +38,7 @@ class Receiver:
         self.duration_match = None
         self.rate = 1
         self.update_thread = None
-        self.message = ""
+        self.message = " "
         self.setup()
         if self.background is True:
             self.start_thread()
