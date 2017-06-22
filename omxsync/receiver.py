@@ -39,6 +39,7 @@ class Receiver:
         self.rate = 1
         self.update_thread = None
         self.message = " "
+        self.net_errors = 0
         self.setup()
         if self.background is True:
             self.start_thread()
@@ -157,10 +158,12 @@ class Receiver:
         try:
             # read incoming socket data
             pos, duration, playback_status = self.socket.recv(1024).decode('utf-8').split('%', 2)
+            self.net_errors = 0
             return (pos, duration, playback_status)
         except Exception as e:
-            print(e)
-            pass
+            self.net_errors += 1
+            if self.net_errors > 20:
+                self.message = "Error: Network is unreachable"
 
         return None
 
