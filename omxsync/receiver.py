@@ -108,15 +108,15 @@ class Receiver:
         # calculate current deviation based on newly received master position
         self.deviation = self.received_position - local_pos
 
+        self.message = 'Master: %.2f/%.2f (deviation: %.2f, %s, rate: %s)' % \
+                       (self.received_duration, self.received_position, self.deviation, local_status, self.rate)
         if self.verbose:
-            self.message = 'Master: %.2f/%.2f (deviation: %.2f, %s, rate: %s)' % \
-                           (self.received_duration, self.received_position, self.deviation, local_status, self.rate)
-        print self.message
+            print self.message
 
         # check file; if master is playing a different file, then there is no use in time-syncing
         if self.duration_match is None:
             if abs(self.received_duration - float(self.player.duration())) > 1:
-                print('durations of files does not match! Master:%s Slave%s' %
+                print('Error: durations of files does not match! Master:%s Slave%s' %
                       (self.received_duration, self.player.duration()))
                 return
             else:
@@ -159,7 +159,7 @@ class Receiver:
             pos, duration, playback_status = self.socket.recv(1024).decode('utf-8').split('%', 2)
             return (pos, duration, playback_status)
         except Exception as e:
-            pass
+            self.message = "Error: Network is unreachable"
 
         return None
 
