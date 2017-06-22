@@ -159,7 +159,7 @@ class Receiver:
             pos, duration, playback_status = self.socket.recv(1024).decode('utf-8').split('%', 2)
             return (pos, duration, playback_status)
         except Exception as e:
-            self.message = "Error: Network is unreachable"
+            pass
 
         return None
 
