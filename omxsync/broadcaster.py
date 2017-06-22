@@ -1,5 +1,5 @@
 import socket
-from time import time
+from time import time, sleep
 from threading import Thread
 from dbus import DBusException
 
@@ -22,7 +22,8 @@ class Broadcaster:
         self.next_broadcast_time = 0
         self.update_thread = None
         self.message = " "
-        self.setup()
+        while self.setup() is False:
+            sleep(1)
         if self.background is True:
             self.start_thread()
 
@@ -46,9 +47,13 @@ class Broadcaster:
 
         try:
             self.socket.connect((self.host, self.port))
+            return True
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception as err:
             print("Network is unreachable")
             print err
+        return False
 
     def start_thread(self):
         self.update_thread = Thread(target=self.update_loop)
@@ -88,10 +93,7 @@ class Broadcaster:
         try:
             self.socket.send(("%s%%%s%%%s" % (str(p),  duration, playback_status)).encode('utf-8'))
             self.message = 'broadcast position: %.2f/%.2f Playback:%s' % (p, duration, playback_status)
-        except socket.error as err:
+        except socket.error:
             self.message = "Network is unreachable"
-            print(self.message)
-            print(err)
-
         if self.verbose:
             print(self.message)
