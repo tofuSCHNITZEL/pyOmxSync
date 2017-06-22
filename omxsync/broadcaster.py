@@ -21,7 +21,7 @@ class Broadcaster:
         self.socket = None
         self.next_broadcast_time = 0
         self.update_thread = None
-        self.message = ""
+        self.message = " "
         self.setup()
         if self.background is True:
             self.start_thread()
@@ -46,8 +46,9 @@ class Broadcaster:
 
         try:
             self.socket.connect((self.host, self.port))
-        except:
-            print("PositionBroadcaster: network is unreachable")
+        except Exception as err:
+            print("Network is unreachable")
+            print err
 
     def start_thread(self):
         self.update_thread = Thread(target=self.update_loop)
@@ -68,7 +69,6 @@ class Broadcaster:
 
     def update(self):
         t = time()
-
         # time for next broadcast?
         if t >= self.next_broadcast_time:
             # broadcast
@@ -86,11 +86,11 @@ class Broadcaster:
 
         try:
             self.socket.send(("%s%%%s%%%s" % (str(p),  duration, playback_status)).encode('utf-8'))
+            self.message = 'broadcast position: %.2f/%.2f Playback:%s' % (p, duration, playback_status)
         except socket.error as err:
-            self.message = "PositionBroadcaster: socket.send failed:"
+            self.message = "Network is unreachable"
             print(self.message)
             print(err)
 
         if self.verbose:
-            self.message = 'broadcast position: %.2f/%.2f Playback:%s' % (str(p), duration, playback_status)
             print(self.message)
