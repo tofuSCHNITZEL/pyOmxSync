@@ -69,6 +69,7 @@ class Broadcaster:
 
     def update(self):
         t = time()
+
         # time for next broadcast?
         if t >= self.next_broadcast_time:
             # broadcast
