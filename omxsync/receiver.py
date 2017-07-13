@@ -10,19 +10,16 @@ DEFAULT_PORT = 1666
 DEFAULT_BIG_TOLERANCE = 3 # amount of deviation above which a large sync should be performed
 DEFAULT_TOLERANCE = .05 # margin that is considered acceptable for slave to be ahead or behind
 DEFAULT_GRACE_TIME = 3 # amount of time to wait with re-syncs after a resync
-DEFAULT_JUMP_AHEAD = 1 # amount of time to jump ahead of master's playback position (giving slave enough time to load new keyframes)
 
 class Receiver:
     def __init__(self, omxplayer, verbose=False, big_tolerance=DEFAULT_BIG_TOLERANCE, tolerance=DEFAULT_TOLERANCE,
-                 grace_time=DEFAULT_GRACE_TIME, jump_ahead=DEFAULT_JUMP_AHEAD, host=DEFAULT_HOST, port=DEFAULT_PORT,
-                 background=True):
+                 grace_time=DEFAULT_GRACE_TIME, host=DEFAULT_HOST, port=DEFAULT_PORT, background=True):
         # config
         self.player = omxplayer
         self.verbose = verbose if type(verbose) is bool else False
         self.big_tolerance = big_tolerance if type(big_tolerance) in (int, float) else DEFAULT_BIG_TOLERANCE
         self.tolerance = tolerance if type(tolerance) in (int, float) else DEFAULT_TOLERANCE
         self.grace_time = grace_time if type(grace_time) in (int, float) else DEFAULT_GRACE_TIME
-        self.jump_ahead = jump_ahead if type(jump_ahead) in (int, float) else DEFAULT_JUMP_AHEAD
         self.host = self.test_host(host)
         self.port = port if type(port) is int else DEFAULT_PORT
         self.background = background if type(background) is bool else True
@@ -194,12 +191,8 @@ class Receiver:
             self.rate = 1
 
     def _perform_big_sync(self):
-        # calculate position to jump to (bit ahead of master's playback position)
-        pos = self.received_position + self.jump_ahead
-        # pause and jump to calculated position
-        self.player.set_position(pos)
-        # pause until the master should have caught up
-        # self.paused_until = self.last_measure_time + self.jump_ahead
+        # jump to master position
+        self.player.set_position(self.received_position)
 
         if self.verbose:
-            print("jumped to position %.2f and paused for %.2f seconds" % (pos, self.jump_ahead))
+            print("jumped to position %.2f" % self.received_position)
