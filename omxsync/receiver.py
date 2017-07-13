@@ -63,6 +63,8 @@ class Receiver:
         self.socket.setblocking(0)
         # bind to configured host/port
         self.socket.bind((self.host, self.port))
+        if self.verbose:
+            print('Connection set up')
 
     def start_thread(self):
         self.update_thread = Thread(target=self.update_loop)
@@ -164,6 +166,8 @@ class Receiver:
             self.net_errors += 1
             if self.net_errors > 20:
                 self.message = "Error: Network is unreachable"
+                if self.verbose:
+                    print self.message
 
         return None
 
