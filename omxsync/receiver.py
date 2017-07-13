@@ -168,6 +168,7 @@ class Receiver:
                 self.message = "Error: Network is unreachable"
                 if self.verbose:
                     print self.message
+                    print e
 
         return None
 
