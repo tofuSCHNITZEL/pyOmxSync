@@ -37,6 +37,7 @@ class Receiver:
         self.update_thread = None
         self.message = " "
         self.net_errors = 0
+        self.master_addr = None
         self.setup()
         if self.background is True:
             self.start_thread()
@@ -156,7 +157,10 @@ class Receiver:
     def _receive_data(self):
         try:
             # read incoming socket data
-            pos, duration, playback_status = self.socket.recv(1024).decode('utf-8').split('%', 2)
+            data, addr = self.socket.recvfrom(1024)
+            if self.master_addr is None:
+                self.master_addr = addr[0].decode('utf-8')
+            pos, duration, playback_status = data.decode('utf-8').split('%', 2)
             self.net_errors = 0
             return (pos, duration, playback_status)
         except Exception as e:
