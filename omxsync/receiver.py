@@ -181,13 +181,13 @@ class Receiver:
 
     def _perform_small_sync(self):
         if self.deviation < 0 and self.rate > 0:
-            self.player.rate(0.975)
+            self.player.set_rate(0.975)
         elif self.deviation > 0 and self.rate < 2:
-            self.player.rate(1.125)
+            self.player.set_rate(1.125)
         self.rate = float(self.player.rate())
 
     def _reset_small_sync(self):
-            self.player.rate(1)
+            self.player.set_rate(1)
             self.rate = float(self.player.rate())
 
     def _perform_big_sync(self):
