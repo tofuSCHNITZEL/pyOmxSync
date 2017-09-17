@@ -21,7 +21,7 @@ class Receiver:
         self.tolerance = tolerance if type(tolerance) in (int, float) else DEFAULT_TOLERANCE
         self.grace_time = grace_time if type(grace_time) in (int, float) else DEFAULT_GRACE_TIME
         self.host = self.test_host(host)
-        self.port = port if type(port) is int else DEFAULT_PORT
+        self.port = port if type(port) is int else DEFAUdLT_PORT
         self.background = background if type(background) is bool else True
         # attributes
         self.socket = None
@@ -181,16 +181,13 @@ class Receiver:
 
     def _perform_small_sync(self):
         if self.deviation < 0 and self.rate > 0:
-            self.player.action(1)
+            self.player.rate(0.975)
         elif self.deviation > 0 and self.rate < 2:
-            self.player.action(2)
+            self.player.rate(1.125)
         self.rate = float(self.player.rate())
 
     def _reset_small_sync(self):
-            if self.rate == 2:
-                self.player.action(1)
-            elif self.rate == 0:
-                self.player.action(2)
+            self.player.rate(1)
             self.rate = float(self.player.rate())
 
     def _perform_big_sync(self):
