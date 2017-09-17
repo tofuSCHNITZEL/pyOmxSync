@@ -188,9 +188,9 @@ class Receiver:
 
     def _reset_small_sync(self):
             if self.rate == 0.975:
-                self.player.action(1)
-            elif self.rate == 1.125:
                 self.player.action(2)
+            elif self.rate == 1.125:
+                self.player.action(1)
             self.rate = float(self.player.rate())
 
     def _perform_big_sync(self):
