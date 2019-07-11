@@ -1,22 +1,25 @@
 import socket
+import struct
 from time import time, sleep
 from threading import Thread
 from dbus import DBusException
 
 DEFAULT_PORT = 1666
-DEFAULT_HOST = '255.255.255.255'
+DEFAULT_HOST = '224.0.0.251'
 DEFAULT_INTERVAL = 1.0 # seconds
 
 class Broadcaster:
     def __init__(self, omxplayer, verbose=False, interval=DEFAULT_INTERVAL, host=DEFAULT_HOST, port=DEFAULT_PORT,
-                 background=True):
+                 background=True, interface=None):
         # config
         self.player = omxplayer
         self.verbose = verbose if type(verbose) is bool else False
         self.interval = interval if type(interval) in (int, float) else DEFAULT_INTERVAL
-        self.host = self.test_host(host)
-        self.port = port if type(port) is int else DEFAULT_PORT
+        host = self.test_host(host)
+        port = port if type(port) is int else DEFAULT_PORT
+        self.multicast = (host, port)
         self.background = background if type(background) is bool else True
+        self.interface = interface
         # attributes
         self.socket = None
         self.next_broadcast_time = 0
@@ -41,19 +44,12 @@ class Broadcaster:
 
     def setup(self):
         # create socket connections
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        ttl = struct.pack('b', 32)
+        self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
         # enable broadcasting
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-        try:
-            self.socket.connect((self.host, self.port))
-            return True
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except Exception as err:
-            print("Network is unreachable")
-            print err
-        return False
+        if self.interface is not None:
+            self.socket.setsockopt(socket.SOL_SOCKET, 25, self.interface)
 
     def start_thread(self):
         self.update_thread = Thread(target=self.update_loop)
@@ -91,7 +87,7 @@ class Broadcaster:
             return
 
         try:
-            self.socket.send(("%s%%%s%%%s" % (str(p),  duration, playback_status)).encode('utf-8'))
+            self.socket.sendto(("%s%%%s%%%s" % (str(p), duration, playback_status)).encode('utf-8'), self.multicast)
             self.message = 'broadcast position: %.2f/%.2f Playback:%s' % (p, duration, playback_status)
         except socket.error:
             self.message = "Network is unreachable"

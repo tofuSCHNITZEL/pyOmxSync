@@ -21,7 +21,7 @@ class Receiver:
         self.tolerance = tolerance if type(tolerance) in (int, float) else DEFAULT_TOLERANCE
         self.grace_time = grace_time if type(grace_time) in (int, float) else DEFAULT_GRACE_TIME
         self.host = self.test_host(host)
-        self.port = port if type(port) is int else DEFAUdLT_PORT
+        self.port = port if type(port) is int else DEFAULT_PORT
         self.background = background if type(background) is bool else True
         # attributes
         self.socket = None
