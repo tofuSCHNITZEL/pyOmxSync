@@ -1,28 +1,33 @@
 import socket
+import struct
 from dbus import DBusException
-from time import time
 import collections
 from threading import Thread
 
 DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 1666
+DEFAULT_MULICAST = '224.0.0.251'
 
 DEFAULT_BIG_TOLERANCE = 3 # amount of deviation above which a large sync should be performed
 DEFAULT_TOLERANCE = .05 # margin that is considered acceptable for slave to be ahead or behind
 DEFAULT_GRACE_TIME = 3 # amount of time to wait with re-syncs after a resync
 
+
 class Receiver:
     def __init__(self, omxplayer, verbose=False, big_tolerance=DEFAULT_BIG_TOLERANCE, tolerance=DEFAULT_TOLERANCE,
-                 grace_time=DEFAULT_GRACE_TIME, host=DEFAULT_HOST, port=DEFAULT_PORT, background=True):
+                 grace_time=DEFAULT_GRACE_TIME, host=DEFAULT_HOST, port=DEFAULT_PORT, multicast=DEFAULT_MULICAST,
+                 background=True, interface=None):
         # config
         self.player = omxplayer
         self.verbose = verbose if type(verbose) is bool else False
         self.big_tolerance = big_tolerance if type(big_tolerance) in (int, float) else DEFAULT_BIG_TOLERANCE
         self.tolerance = tolerance if type(tolerance) in (int, float) else DEFAULT_TOLERANCE
         self.grace_time = grace_time if type(grace_time) in (int, float) else DEFAULT_GRACE_TIME
-        self.host = self.test_host(host)
+        self.host = self.test_host(host, DEFAULT_HOST)
         self.port = port if type(port) is int else DEFAULT_PORT
+        self.multicast = self.test_host(multicast, DEFAULT_MULICAST)
         self.background = background if type(background) is bool else True
+        self.interface = interface
         # attributes
         self.socket = None
         self.received_position = None
@@ -45,14 +50,14 @@ class Receiver:
     def __del__(self):
         self.destroy()
 
-    def test_host(self, host):
+    def test_host(self, host, default):
         host_test = host.split('.', 3)
         try:
             all(int(item) for item in host_test)
             if len(host_test) == 4:
                 return host
         except:
-            return DEFAULT_HOST
+            return default
 
     def setup(self):
         # create socket connections
@@ -61,6 +66,11 @@ class Receiver:
         self.socket.setblocking(0)
         # bind to configured host/port
         self.socket.bind((self.host, self.port))
+        group = socket.inet_aton(self.multicast)
+        mreq = struct.pack('4sL', group, socket.INADDR_ANY)
+        self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        if self.interface is not None:
+            self.socket.setsockopt(socket.SOL_SOCKET, 25, self.interface)
         if self.verbose:
             print('Connection set up')
 
