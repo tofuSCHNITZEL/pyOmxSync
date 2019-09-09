@@ -3,6 +3,7 @@ import struct
 from dbus import DBusException
 import collections
 from threading import Thread
+from time import sleep
 
 DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 1666
@@ -68,9 +69,17 @@ class Receiver:
         self.socket.bind((self.host, self.port))
         group = socket.inet_aton(self.multicast)
         mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-        self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         if self.interface is not None:
             self.socket.setsockopt(socket.SOL_SOCKET, 25, self.interface)
+        self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        setup = False
+        while not setup:
+            try:
+                self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+                setup = True
+            except socket.error:
+                print("Network interface not ready")
+                sleep(2)
         if self.verbose:
             print('Connection set up')
 
