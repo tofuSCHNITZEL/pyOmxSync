@@ -7,7 +7,7 @@ from time import sleep
 
 DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = 1666
-DEFAULT_MULICAST = '224.0.0.251'
+DEFAULT_MULICAST = '224.0.0.160'
 
 DEFAULT_BIG_TOLERANCE = 3 # amount of deviation above which a large sync should be performed
 DEFAULT_TOLERANCE = .05 # margin that is considered acceptable for slave to be ahead or behind

@@ -5,7 +5,7 @@ from threading import Thread
 from dbus import DBusException
 
 DEFAULT_PORT = 1666
-DEFAULT_HOST = '224.0.0.251'
+DEFAULT_HOST = '224.0.0.160'
 DEFAULT_INTERVAL = 1.0 # seconds
 
 class Broadcaster:
