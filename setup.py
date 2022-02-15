@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='omxsync',
-      version='0.1.1',
+      version='0.2.0',
       description='Master/slave syncing of omxplayer instances over network',
       url='https://github.com/tofuSCHNITZEL/pyOmxSync',
       author='Mark van de Korput',
