@@ -3,7 +3,7 @@ from setuptools import setup
 setup(name='omxsync',
       version='0.1.1',
       description='Master/slave syncing of omxplayer instances over network',
-      url='http://github.com/markkorput/pyOmxSync',
+      url='https://github.com/tofuSCHNITZEL/pyOmxSync',
       author='Mark van de Korput',
       author_email='dr.theman@gmail.com',
       license='MIT',

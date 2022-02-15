@@ -131,13 +131,12 @@ class Receiver:
         self.message = 'Master: %.2f/%.2f (deviation: %.2f, %s, rate: %s)' % \
                        (self.received_duration, self.received_position, self.deviation, local_status, self.rate)
         if self.verbose:
-            print self.message
+            print(self.message)
 
         # check file; if master is playing a different file, then there is no use in time-syncing
         if self.duration_match is None:
             if abs(self.received_duration - float(self.player.duration())) > 1:
-                print('Error: durations of files does not match! Master:%s Slave%s' %
-                      (self.received_duration, self.player.duration()))
+                print('Error: durations of files does not match! Master:{} Slave:{}'.format(self.received_duration, self.player.duration()))
                 return
             else:
                 self.duration_match = True
@@ -187,8 +186,8 @@ class Receiver:
             if self.net_errors > 20:
                 self.message = "Error: Network is unreachable"
                 if self.verbose:
-                    print self.message
-                    print e
+                    print(self.message)
+                    print(e)
 
         return None
 
@@ -218,4 +217,4 @@ class Receiver:
         self.player.set_position(self.received_position)
 
         if self.verbose:
-            print("jumped to position %.2f" % self.received_position)
+            print("jumped to position {0:2f}".format(self.received_position))
