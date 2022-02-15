@@ -68,18 +68,10 @@ class Receiver:
         # bind to configured host/port
         self.socket.bind((self.host, self.port))
         group = socket.inet_aton(self.multicast)
-        mreq = struct.pack('4sL', group, socket.INADDR_ANY)
+        mreq = struct.pack('4sl', group, socket.INADDR_ANY)
         if self.interface is not None:
             self.socket.setsockopt(socket.SOL_SOCKET, 25, self.interface)
         self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-        setup = False
-        while not setup:
-            try:
-                self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-                setup = True
-            except socket.error:
-                print("Network interface not ready")
-                sleep(2)
         if self.verbose:
             print('Connection set up')
 
@@ -175,9 +167,7 @@ class Receiver:
     def _receive_data(self):
         try:
             # read incoming socket data
-            data, addr = self.socket.recvfrom(1024)
-            if self.master_addr is None:
-                self.master_addr = addr[0].decode('utf-8')
+            data = self.socket.recv(1024)
             pos, duration, playback_status = data.decode('utf-8').split('%', 2)
             self.net_errors = 0
             return (pos, duration, playback_status)

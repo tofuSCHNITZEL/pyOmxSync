@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 try:
     from omxplayer import OMXPlayer
 except ImportError:
@@ -13,7 +13,7 @@ if len(sys.argv) < 2:
 
 try:
     print("Load player")
-    player = OMXPlayer(sys.argv[1])
+    player = OMXPlayer(sys.argv[1], dbus_name='com.adafruit.videolooper.omxplayer')
 
     print("Load Receiver")
     receiver = Receiver(player, {'verbose': True})
@@ -24,6 +24,7 @@ try:
 
     while player.playback_status() != "Stopped":
         receiver.update()
+        print
 
     print("Stop player")
     player.stop()
